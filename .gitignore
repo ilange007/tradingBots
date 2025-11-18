@@ -1,0 +1,24 @@
+#Personal folders
+.venv-copia/
+OtrasVersiones/
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code
+.vscode/
+
+# Logs, env files, keys
+*.log
+*.env
+.env.local
+logs*
+state*
+*.lnk

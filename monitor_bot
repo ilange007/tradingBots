@@ -1,0 +1,83 @@
+import os
+import sys
+import time
+import ccxt
+from dotenv import load_dotenv
+
+# Importa las funciones de los otros scripts
+from build_features import build_features, fetch_ohlcv_df, ts
+from combined_strategy import get_combined_signal
+
+def main():
+    """Bucle principal que monitorea un símbolo."""
+    
+    # Carga las variables de entorno
+    load_dotenv()
+    
+    # Parámetros desde el archivo .env o por defecto
+    EXCHANGE = os.getenv("EXCHANGE", "binanceusdm").lower()
+    TIMEFRAME = os.getenv("TIMEFRAME", "4h")
+    LOOP_SLEEP_SEC = 20
+    MIN_VOLATILITY = float(os.getenv("MIN_VOLATILITY", "1.00"))
+    MAX_VOLATILITY = float(os.getenv("MAX_VOLATILITY", "1.45"))
+    
+    # Argumento de línea de comandos para el símbolo
+    if len(sys.argv) < 2:
+        print(f"Uso: python {sys.argv[0]} <SYMBOL>")
+        sys.exit(1)
+        
+    symbol = sys.argv[1].upper()
+    
+    print(f"\n{ts()} | Monitor de símbolos iniciado para {symbol} en el timeframe {TIMEFRAME}. Actualizando cada {LOOP_SLEEP_SEC} segundos.")
+    
+    exchange = getattr(ccxt, EXCHANGE)({
+        'options': {'defaultType': 'future'},
+        'enableRateLimit': True,
+    })
+    
+    try:
+        while True:
+            # 1. Obtener datos del mercado
+            df = fetch_ohlcv_df(exchange, symbol=symbol, timeframe=TIMEFRAME, limit=250)
+            
+            if df.empty or len(df) < 200:
+                print(f"{ts()} | Datos insuficientes para {symbol}. Esperando...")
+                time.sleep(LOOP_SLEEP_SEC)
+                continue
+            
+            # 2. Calcular indicadores
+            df = build_features(df)
+            
+            # 3. Obtener la señal de la estrategia
+            current_signal = get_combined_signal(df, MIN_VOLATILITY, MAX_VOLATILITY)
+            
+            # 4. Imprimir los resultados
+            current_price = df['close'].iloc[-1]
+            current_atr = df['ATR'].iloc[-1]
+            current_sma_trend = df['SMA_TREND'].iloc[-1]
+            
+            print("---" * 20)
+            print(f"{ts()} | Monitoreo para {symbol} ({TIMEFRAME})")
+            print(f"  > Precio Actual: ${current_price:.4f}")
+            print(f"  > Señal de Trading: {current_signal}")
+            print(f"  > ATR: {current_atr:.4f}")
+            print(f"  > SMA 200: {current_sma_trend:.4f}")
+            print(f"  > MACD: {df['MACD'].iloc[-1]:.4f}")
+            print(f"  > MACD Signal: {df['MACD_SIGNAL'].iloc[-1]:.4f}")
+            print(f"  > RSI: {df['RSI'].iloc[-1]:.2f}")
+            print(f"  > StochRSI K: {df['STOCH_RSI_K'].iloc[-1]:.2f}")
+            print(f"  > StochRSI D: {df['STOCH_RSI_D'].iloc[-1]:.2f}")
+            print("---" * 20)
+            
+            # Esperar antes de la próxima actualización
+            time.sleep(LOOP_SLEEP_SEC)
+
+    except KeyboardInterrupt:
+        print(f"\n{ts()} | Monitor detenido por el usuario.")
+    except Exception as e:
+        print(f"{ts()} | Error inesperado: {e}. Reiniciando en 60 segundos.")
+        time.sleep(60)
+        main()
+
+if __name__ == "__main__":
+    main()
