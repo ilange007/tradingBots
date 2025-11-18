@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 # Nota: Este script requiere el archivo 'combined_strategy.py' en la misma carpeta.
 from combined_strategy import get_combined_signal
-from send_mail import send_email_notification
+from utilities.send_mail import send_email_notification
 from build_features import build_features, ts, fetch_ohlcv_df
 
 # ----------------------------- Utilidades -----------------------------

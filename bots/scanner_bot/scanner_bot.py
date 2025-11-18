@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from decision_bot import main_loop
+from bots.decision_bot.decision_bot import main_loop
 
 load_dotenv()
 TIMEFRAME = os.getenv("TIMEFRAME", "1h")
