@@ -1,12 +1,16 @@
 import os
+import sys
 import time
 import ccxt
 from dotenv import load_dotenv
 
+# Add project root to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 # Nota: Este script requiere el archivo 'combined_strategy.py' en la misma carpeta.
-from combined_strategy import get_combined_signal
+from utilities.combined_strategy import get_combined_signal
 from utilities.send_mail import send_email_notification
-from build_features import build_features, ts, fetch_ohlcv_df
+from utilities.build_features import build_features, ts, fetch_ohlcv_df
 
 # ----------------------------- Utilidades -----------------------------
 

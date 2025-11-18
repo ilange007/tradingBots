@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import math
 from datetime import datetime
@@ -8,8 +9,11 @@ import ccxt
 from dotenv import load_dotenv
 from typing import Tuple
 
+# Add project root to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 # Nota: Este script requiere el archivo 'combined_strategy.py' en la misma carpeta.
-from combined_strategy import get_combined_signal
+from utilities.combined_strategy import get_combined_signal
 
 # ----------------------------- Utilidades -----------------------------
 

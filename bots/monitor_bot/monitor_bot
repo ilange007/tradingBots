@@ -4,9 +4,12 @@ import time
 import ccxt
 from dotenv import load_dotenv
 
+# Add project root to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 # Importa las funciones de los otros scripts
-from build_features import build_features, fetch_ohlcv_df, ts
-from combined_strategy import get_combined_signal
+from utilities.build_features import build_features, fetch_ohlcv_df, ts
+from utilities.combined_strategy import get_combined_signal
 
 def main():
     """Bucle principal que monitorea un símbolo."""
