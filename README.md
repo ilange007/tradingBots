@@ -1,4 +1,4 @@
-1. Asegúrate de tener Python instalado en tu sistema.
+1. Asegúrate de tener Python instalado en tu sistema. (3.13)
 2. Descarga el código de la aplicación y el archivo requirements.txt.
 3. Abre una terminal y navega hasta el directorio del proyecto.
 4. Sigue estos pasos:

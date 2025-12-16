@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # ----------------------------- Utilidades -----------------------------
 
 def ts():
-    return datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # ----------------------------- Configuración -----------------------------
 
