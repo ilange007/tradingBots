@@ -10,7 +10,7 @@ ruta_dotenv = pathlib.Path(__file__).parent.parent / '.env'
 # Cargar el archivo .env
 load_dotenv(ruta_dotenv)
 
-capital=float(os.getenv('CAPITAL', 10))  # Capital fijo por operación
+capital=float(os.getenv('CAPITAL', 0))  # Capital fijo por operación
 
 # Simulación de memoria para Trailing Stop
 posiciones_activas = {}
@@ -59,23 +59,28 @@ def consultar_senal_mercado(exchange, symbol):
 
     # --- LÓGICA DE ENTRADA (ESTRATEGIA SWING) ---
     
-    # LONG: Precio sobre SMA200 + RSI cruzando hacia arriba + MACD positivo
+    # Si el RSI estuvo bajo 40 en las últimas 3 velas cerradas (iloc[-4] a iloc[-2])
+    rsi_reciente_bajo = df['rsi'].iloc[-4:-1].min() < 40
+    # Si el RSI estuvo alto sobre 60 en las últimas 3 velas cerradas
+    rsi_reciente_alto = df['rsi'].iloc[-4:-1].max() > 60
+
+    # LONG: Precio sobre SMA200 + RSI estuvo bajo (Memoria) + MACD positivo (Gatillo)
     condicion_long = (
         last['close'] > last['sma200'] and     # Tendencia Alcista
-        last['rsi'] < 40 and                   # RSI bajo (rebote)
-        last['MACDh_12_26_9'] > 0              # MACD Histograma positivo (cruce alcista)
+        # rsi_reciente_bajo and                  # RSI estuvo BAJO recientemente (Memoria)
+        last['MACDh_12_26_9'] > 0              # MACD Histograma positivo (cruce alcista AHORA)
     )
 
-    # SHORT: Precio bajo SMA200 + RSI alto + MACD negativo
+    # SHORT: Precio bajo SMA200 + RSI estuvo alto (Memoria) + MACD negativo (Gatillo)
     condicion_short = (
         last['close'] < last['sma200'] and     # Tendencia Bajista
-        last['rsi'] > 60 and                   # RSI alto (caída)
-        last['MACDh_12_26_9'] < 0              # MACD Histograma negativo
+        # rsi_reciente_alto and                  # RSI estuvo ALTO recientemente (Memoria)
+        last['MACDh_12_26_9'] < 0              # MACD Histograma negativo (cruce bajista AHORA)
     )
 
     # NOTA: Para pruebas, forzaremos una señal aleatoria a veces si no hay señal real,
     # QUITA ESTO EN PRODUCCIÓN para usar solo señales reales.
-    if True: return {'entrar': True, 'lado': 'long', 'cantidad_usdt': capital}
+    #if True: return {'entrar': True, 'lado': 'long', 'cantidad_usdt': capital}
 
     if condicion_long:
         print(f"   🔥 [SEÑAL]: LONG confirmado en {symbol}. RSI: {last['rsi']:.2f}")
@@ -132,9 +137,9 @@ def monitorear_posicion(symbol, precio_actual):
     # -----------------------------------------------------------
     # LÓGICA DE SALIDA (Ajustada a tu requerimiento)
     # -----------------------------------------------------------
-    
-    UMBRAL_ACTIVACION = 0  # Activar vigilancia al ganar 5%
-    UMBRAL_RETROCESO = 0   # Cerrar si devolvemos 5% desde el máximo
+
+    UMBRAL_ACTIVACION = 15  # Activar vigilancia al ganar 15%
+    UMBRAL_RETROCESO = 5   # Cerrar si devolvemos 5% desde el máximo
 
     # Si alguna vez tuvimos más de 5% de ganancia...
     if data['highest_pnl'] > UMBRAL_ACTIVACION: 
@@ -148,8 +153,8 @@ def monitorear_posicion(symbol, precio_actual):
             return {'accion': 'CERRAR', 'lado': lado}
             
     # Stop Loss de seguridad (Hard Stop)
-    # Si perdemos más del 50% del margen inicial, cerramos.
-    if roi_actual < -1: 
+    # Si perdemos más del 15% del margen inicial, cerramos.
+    if roi_actual < -15: 
          print(f"   💀 [Stop Loss]: PnL crítico de {roi_actual:.2f}%")
          lado = data['side']
          del posiciones_activas[symbol]
